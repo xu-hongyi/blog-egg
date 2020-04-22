@@ -3,24 +3,37 @@
 const Controller = require('egg').Controller;
 
 class HomeController extends Controller {
-  async index() {
-    const { ctx, app } = this;
-    
-    ctx.body = 'hello, api接口';
-  }
-
   async getArticleList(){
-    let sql = 'SELECT artical.id as id, ' +
-              'artical.title as title, ' + 
-              'artical.introduce as introduce, ' + 
-              'artical.addTime as addTime, ' + 
-              'artical.view_count as view_count, ' +
+    let sql = 'SELECT article.id as id, ' +
+              'article.title as title, ' + 
+              'article.introduce as introduce, ' + 
+              "FROM_UNIXTIME(article.addTime, '%Y-%m-%d %H:%i:%s') as addTime, " + 
+              'article.view_count as view_count, ' +
               'type.typename as typeName ' +
-              'FROM artical LEFT JOIN type ON artical.type_id = type_id' ;
+              'FROM article LEFT JOIN type ON article.type_id = type_id' ;
     const results = await this.app.mysql.query(sql);
-    console.log(results)
     this.ctx.body = {data:results}
   } 
+
+  async getArticleById(){
+    const id = ctx.params.id;
+    const sql = 'SELECT article.id as id, ' +
+    'article.title as title, ' + 
+    'article.article_content as article_content, ' + 
+    "FROM_UNIXTIME(article.addTime, '%Y-%m-%d %H:%i:%s') as addTime, " + 
+    'article.view_count as view_count, ' +
+    'type.typename as typeName, ' +
+    'type.id as typeId'
+    'FROM article LEFT JOIN type ON article.type_id = type_id' + 
+     'WHERE article.id =' + id;
+     const result = await this.app.mysql.query(sql);
+     this.ctx.body = {data:result}
+  }
+  async getTypeInfo(){
+    const result = await this.app.mysql.select('type')
+    this.ctx.body = {data:result}
+  }
+  
 }
 
 module.exports = HomeController;
