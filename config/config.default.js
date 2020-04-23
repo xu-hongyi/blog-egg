@@ -16,8 +16,10 @@ module.exports = appInfo => {
   config.keys = appInfo.name + '_1587454539952_8198';
 
   // add your middleware config here
-  // config.middleware = ["adminauth"];
-
+  config.middleware = [];
+  config.jwt = {
+    secret:"123456",
+  }
   // add your user config here
   const userConfig = {
     // myAppName: 'egg',
@@ -46,7 +48,7 @@ module.exports = appInfo => {
     csrf:{
       enable:false
     },
-    domainWhiteList:["*"]
+    domainWhiteList:['http://localhost:3000']
   };
   config.cors = {
     origin:"http://localhost:3000",

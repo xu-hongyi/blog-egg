@@ -3,18 +3,20 @@
 const Controller = require("egg").Controller
 
 class MainController extends Controller {
-
-	async checkLogin() {
+	async login() {
 		const username = this.ctx.request.body.username;
 		const password = this.ctx.request.body.password;
 		const sql = " SELECT username FROM admin_user WHERE username = '" + username + "' AND password = '" + password + "'"
 		const res = await this.app.mysql.query(sql);
 		if (res.length > 0) {
-			let openId = new Date().getTime();
-			this.ctx.session.openId = { 'openId': openId }
-			this.ctx.body = { "data": "登陆成功", 'openId': openId }
+			const token = this.app.jwt.sign({
+				username:username,
+				password:password
+			}, this.config.jwt.secret)
+			console.log(token)
+			this.ctx.body = { code:200, data: "登陆成功", token:token }
 		} else {
-			this.ctx.body = { 'data': "登陆失败" }
+			this.ctx.body = { code:400, data: "登陆失败" }
 		}
 	}
 
@@ -29,6 +31,7 @@ class MainController extends Controller {
 		const insertSuccess = result.affectedRows === 1;
 		const insertId = result.insertId;
 		this.ctx.body = {
+			code:200,
 			isSuccess: insertSuccess,
 			insertId
 		}
@@ -39,6 +42,7 @@ class MainController extends Controller {
 		const result = await this.app.mysql.update("article", tempArticle);
 		const updateSuccess = result.affectedRows === 1;
 		this.ctx.body = {
+			code:200,
 			isSuccess: updateSuccess
 		}
 	}
@@ -53,14 +57,17 @@ class MainController extends Controller {
                 'FROM article LEFT JOIN type ON article.type_id = type.Id '+
                 'ORDER BY article.id DESC '
 		const results = await this.app.mysql.query(sql);
-		console.log(results)
-		this.ctx.body = { data: results }
+		this.ctx.body = { code:200, data: results }
 	}
 
 	async deleteArticle(){
-		const id = this.ctx.params.id;
-		const res = await this.app.mysql.delete("article", {id:id})
-		this.ctx.body = {data:res}
+		try {
+			const id = this.ctx.params.id;
+			await this.app.mysql.delete("article", {id:id})
+			this.ctx.body = {code: 200, data:"删除成功"}
+		} catch (error) {
+			this.ctx.body = {code:404, data:'删除失败'}
+		}
 	}
 
 	async getArticleById(){
@@ -80,9 +87,9 @@ class MainController extends Controller {
 	}
 
 	async getTypeCount(){
-		const sql = 'SELECT type_id, count(1) FROM article LEFT JOIN type ON article.type_id = type.id  group by type_id;'
+		const sql = 'SELECT type_id, count(1) as num FROM article LEFT JOIN type ON article.type_id = type.id  group by type_id;'
 		const result = await this.app.mysql.query(sql);
-		this.ctx.body = {data:result}
+		this.ctx.body = {code:200, data:result}
 	}
 }
 
