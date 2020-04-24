@@ -4,42 +4,32 @@ const Controller = require('egg').Controller;
 
 class HomeController extends Controller {
   async getArticleList(){
-    let sql = 'SELECT article.id as id, ' +
-              'article.title as title, ' + 
-              'article.introduce as introduce, ' + 
-              "FROM_UNIXTIME(article.addTime, '%Y-%m-%d %H:%i:%s') as addTime, " + 
-              'article.view_count as view_count, ' +
-              'type.typename as typeName ' +
-              'FROM article LEFT JOIN type ON article.type_id = type_id' ;
-    const results = await this.app.mysql.query(sql);
-    this.ctx.body = {data:results}
+    const page = this.ctx.request.query.page;
+    const data = await this.service.page.getArticleList(page)
+    this.ctx.body = {code:200, data}
   } 
 
   async getArticleById(){
 		let id = this.ctx.params.id;
-		const sql = 'SELECT article.id as id,'+
-		'article.title as title,'+
-		'article.introduce as introduce,'+
-		'article.article_content as article_content,'+
-		"FROM_UNIXTIME(article.addTime,'%Y-%m-%d' ) as addTime,"+
-		'article.view_count as view_count ,'+
-		'type.typename as typeName ,'+
-		'type.id as typeId '+
-		'FROM article LEFT JOIN type ON article.type_id = type.Id '+
-		'WHERE article.id='+id
-		const result = await this.app.mysql.query(sql);
-		this.ctx.body = {data:result}
+    const data = await this.service.page.getArticleById(id);
+		this.ctx.body = {code:200, data}
 	}
   async getTypeInfo(){
-    const result = await this.app.mysql.select('type')
-    this.ctx.body = {data:result}
+    const data = await this.service.page.getTypeInfo();
+    this.ctx.body = {code:200, data}
   }
   
   async getListById(){
     const id = this.ctx.params.id;
-    const sql = "SELECT * FROM article WHERE type_id =" + id;
-    const result = await this.app.mysql.query(sql);
-    this.ctx.body = {code:200, data:result}
+    const page = this.ctx.request.query.page;
+    const data = await this.service.page.getListById(id, page);
+    this.ctx.body = {code:200, data}
+  }
+
+  async searchArticle(){
+    const key = this.ctx.request.body.key;
+    const data = await this.service.admin.searchArticle(key);
+    this.ctx.body = {code:200, data}
   }
 }
 

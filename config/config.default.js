@@ -20,6 +20,9 @@ module.exports = appInfo => {
   config.jwt = {
     secret:"123456",
   }
+  config.session = {
+    renew:true
+  }
   // add your user config here
   const userConfig = {
     // myAppName: 'egg',

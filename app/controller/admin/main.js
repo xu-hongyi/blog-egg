@@ -6,30 +6,42 @@ class MainController extends Controller {
 	async login() {
 		const username = this.ctx.request.body.username;
 		const password = this.ctx.request.body.password;
-		const sql = " SELECT username FROM admin_user WHERE username = '" + username + "' AND password = '" + password + "'"
-		const res = await this.app.mysql.query(sql);
+		const res = await this.service.admin.getUser(username, password);
 		if (res.length > 0) {
 			const token = this.app.jwt.sign({
 				username:username,
 				password:password
 			}, this.config.jwt.secret)
-			console.log(token)
-			this.ctx.body = { code:200, data: "登陆成功", token:token }
+			this.ctx.session.isLogin = true;
+			this.ctx.cookies.set("token", token, {
+				maxAge:3 * 1000 * 3600 * 24,
+				httpOnly:true,
+				overwrite:false
+			})
+			this.ctx.body = { code:200, data: "登陆成功", token }
 		} else {
 			this.ctx.body = { code:400, data: "登陆失败" }
 		}
 	}
 
+	async checkLogin(){
+		if(this.ctx.session.isLogin){
+			this.ctx.body = {code:200, data:true}
+		}else{
+			this.ctx.body = {code:200, data:false}
+		}
+	}
+
 	async getTypeInfo() {
-		const resType = await this.app.mysql.select("type");
-		this.ctx.body = { data: resType }
+		const data = await this.service.page.getTypeInfo()
+		this.ctx.body = { code:200, data }
 	}
 
 	async addArticle() {
 		const tempArticle = this.ctx.request.body;
-		const result = await this.app.mysql.insert('article', tempArticle);
-		const insertSuccess = result.affectedRows === 1;
-		const insertId = result.insertId;
+		const data =  await this.service.admin.addArticle(tempArticle);
+		const insertSuccess = data.affectedRows === 1;
+		const insertId = data.insertId;
 		this.ctx.body = {
 			code:200,
 			isSuccess: insertSuccess,
@@ -39,7 +51,7 @@ class MainController extends Controller {
 
 	async updateArticle() {
 		const tempArticle = this.ctx.request.body;
-		const result = await this.app.mysql.update("article", tempArticle);
+		const result = await this.service.admin.updateArticle(tempArticle);
 		const updateSuccess = result.affectedRows === 1;
 		this.ctx.body = {
 			code:200,
@@ -48,48 +60,35 @@ class MainController extends Controller {
 	}
 
 	async getArticleList() {
-		const sql = 'SELECT article.id as id,'+
-                'article.title as title,'+
-                'article.introduce as introduce,'+
-				"FROM_UNIXTIME(article.addTime,'%Y-%m-%d' ) as addTime,"+
-				'article.view_count as view_count,' +
-                'type.typename as typeName '+
-                'FROM article LEFT JOIN type ON article.type_id = type.Id '+
-                'ORDER BY article.id DESC '
-		const results = await this.app.mysql.query(sql);
-		this.ctx.body = { code:200, data: results }
+		const data = await this.service.page.getArticleList(0);
+		this.ctx.body = { code:200, data }
 	}
 
 	async deleteArticle(){
-		try {
-			const id = this.ctx.params.id;
-			await this.app.mysql.delete("article", {id:id})
+		const id = this.ctx.params.id;
+		const data = await this.service.admin.deleteArticle(id);
+		if(data.affectedRows === 1){
 			this.ctx.body = {code: 200, data:"删除成功"}
-		} catch (error) {
-			this.ctx.body = {code:404, data:'删除失败'}
+		}else{
+			this.ctx.body = {code: 200, data:"找不到这篇文章"}
 		}
 	}
 
 	async getArticleById(){
 		let id = this.ctx.params.id;
-		const sql = 'SELECT article.id as id,'+
-		'article.title as title,'+
-		'article.introduce as introduce,'+
-		'article.article_content as article_content,'+
-		"FROM_UNIXTIME(article.addTime,'%Y-%m-%d' ) as addTime,"+
-		'article.view_count as view_count ,'+
-		'type.typename as typeName ,'+
-		'type.id as typeId '+
-		'FROM article LEFT JOIN type ON article.type_id = type.Id '+
-		'WHERE article.id='+id
-		const result = await this.app.mysql.query(sql);
-		this.ctx.body = {data:result}
+		const data = await this.service.page.getArticleById(id);
+		this.ctx.body = {code:200, data}
 	}
 
 	async getTypeCount(){
-		const sql = 'SELECT type_id, count(1) as num FROM article LEFT JOIN type ON article.type_id = type.id  group by type_id;'
-		const result = await this.app.mysql.query(sql);
-		this.ctx.body = {code:200, data:result}
+		const data = await this.service.admin.getTypeCount()
+		this.ctx.body = {code:200, data}
+	}
+
+	async searchArticle(){
+		const params = this.ctx.request.body;
+		const data = await this.service.admin.searchArticle(params);
+		this.ctx.body = {code:200, data}
 	}
 }
 
