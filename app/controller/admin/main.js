@@ -44,8 +44,8 @@ class MainController extends Controller {
 		const insertId = data.insertId;
 		this.ctx.body = {
 			code:200,
-			isSuccess: insertSuccess,
-			insertId
+			data: insertSuccess,
+			id:insertId
 		}
 	}
 
@@ -55,7 +55,7 @@ class MainController extends Controller {
 		const updateSuccess = result.affectedRows === 1;
 		this.ctx.body = {
 			code:200,
-			isSuccess: updateSuccess
+			data: updateSuccess
 		}
 	}
 

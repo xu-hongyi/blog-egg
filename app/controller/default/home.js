@@ -5,6 +5,7 @@ const Controller = require('egg').Controller;
 class HomeController extends Controller {
   async getArticleList(){
     const page = this.ctx.request.query.page;
+    console.log(this.ctx.request.query)
     const data = await this.service.page.getArticleList(page)
     this.ctx.body = {code:200, data}
   } 
