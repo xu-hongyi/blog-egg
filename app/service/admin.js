@@ -31,7 +31,8 @@ class AdminService extends Service{
 	}
 
 	async searchArticle({key, page = 0, limit = 5}){
-		const sql = "SELECT * FROM article WHERE CONCAT(title, article_content,introduce) LIKE CONCAT('%', '"+ key +"' ,'%')  LIMIT "+ page +","+ limit;
+		const p = parseInt(page) * parseInt(limit);
+		const sql = "SELECT * FROM article WHERE CONCAT(title, article_content,introduce) LIKE CONCAT('%', '"+ key +"' ,'%')  LIMIT "+ p +","+ limit;
 		const result = await this.app.mysql.query(sql);
 		return result;
 	}

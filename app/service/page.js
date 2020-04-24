@@ -4,13 +4,14 @@ const Service = require('egg').Service;
 
 class HomeService extends Service{
 	async getArticleList(page, limit = 5){
+		const p = parseInt(page) * parseInt(limit);
 		let sql = 'SELECT article.id as id, ' +
               'article.title as title, ' + 
               'article.introduce as introduce, ' + 
               "FROM_UNIXTIME(article.addTime, '%Y-%m-%d %H:%i:%s') as addTime, " + 
               'article.view_count as view_count, ' +
               'type.typename as typeName ' +
-              'FROM article LEFT JOIN type ON article.type_id = type.id ORDER BY article.id DESC LIMIT '+ page +','+limit;
+              'FROM article LEFT JOIN type ON article.type_id = type.id ORDER BY article.id DESC LIMIT '+ p +','+limit;
 		const results = await this.app.mysql.query(sql);
 		return results;	
 	}
@@ -36,6 +37,7 @@ class HomeService extends Service{
 	}
 
 	async getListById(id, page, limit = 5){
+		const p = parseInt(page) * parseInt(limit);
 		let sql = 'SELECT article.id as id, ' +
               'article.title as title, ' + 
               'article.introduce as introduce, ' + 
@@ -43,7 +45,7 @@ class HomeService extends Service{
               'article.view_count as view_count, ' +
               'type.typename as typeName ' +
 			  'FROM article LEFT JOIN type ON article.type_id = type.id ' +
-			  'WHERE article.type_id=' + id +'ORDER BY article.id DESC LIMIT '+ page +',' + limit;
+			  'WHERE article.type_id=' + id +'ORDER BY article.id DESC LIMIT '+ p +',' + limit;
 		const result = await this.app.mysql.query(sql);
 		return result;
 	}
