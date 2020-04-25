@@ -5,7 +5,6 @@ const Controller = require('egg').Controller;
 class HomeController extends Controller {
   async getArticleList(){
     const page = this.ctx.request.query.page;
-    console.log(this.ctx.request.query)
     const data = await this.service.page.getArticleList(page)
     this.ctx.body = {code:200, data}
   } 
@@ -30,6 +29,11 @@ class HomeController extends Controller {
   async searchArticle(){
     const key = this.ctx.request.body.key;
     const data = await this.service.admin.searchArticle(key);
+    this.ctx.body = {code:200, data}
+  }
+
+  async getTypeCount(){
+    const data = await this.service.admin.getTypeCount();
     this.ctx.body = {code:200, data}
   }
 }
